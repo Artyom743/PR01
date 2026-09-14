@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "practice_id": "PR01",
+  "commit": "c295bde5d14f748e2a281d2c1dc0d09d89e6b4a3",
+  "course_kit": {
+    "version": "v1-w02",
+    "archive_sha256": "5d210c431e32418f45e2cffa9dd2028116c7a9520a36f3c7079c778cd73437a8"
+  },
+  "commands": [
+    "ros2 run turtlesim turtlesim_node",
+    "ros2 run turtlesim turtle_teleop_key",
+    "ros2 node list --no-daemon --spin-time 2",
+    "ros2 topic list -t",
+    "ros2 node info /turtlesim",
+    "ros2 topic type /turtle1/pose",
+    "POSE_TYPE=$(ros2 topic type /turtle1/pose)",
+    "ros2 topic echo /turtle1/pose --once",
+    "ros2 topic hz /turtle1/pose",
+    "export ROS_DOMAIN_ID=17",
+    "ros2 run turtlesim turtle_teleop_key",
+    "export ROS_DOMAIN_ID=17",
+    "ros2 node list --no-daemon --spin-time 2",
+    "timeout 5s ros2 topic echo /turtle1/pose '$POSE_TYPE' --once > evidence/pr01/pose-broken.txt 2>&1",
+    "printf 'exit=%s\n' '$?'",
+    "export ROS_DOMAIN_ID=16",
+    "ros2 node list --no-daemon --spin-time 2",
+    "timeout 5s ros2 topic echo /turtle1/pose '$POSE_TYPE' --once > evidence/pr01/pose-fixed.txt 2>&1",
+    "printf 'exit=%s\n' '$?'",
+    "python3 -m json.tool evidence/pr01/environment.json > /dev/null",
+    "python3 .course-kit/v1/tools/check_practice.py PR01 --submission ."
+  ],
+  "tests": [
+    {
+      "name": "Терминалы A и B/C имеют разные домены, координаты не пришли, exit = 124",
+      "status": "passed",
+      "evidence": "pose-broken.txt"
+    },
+    {
+      "name": "Терминалы имеют одинаковый домен, координаты пришли, exit = 0",
+      "status": "passed",
+      "evidence": "pose-type.txt, pose-before.txt"
+    }
+  ],
+  "defect": {
+    "reproducer": "Терминал A остался с доменом 16, Терминал B остановлен и запущен с доменом 17, Терминал С тоже переведён на домен 17, запрошен Pose, данные отсутствуют, exit = 124",
+    "root_cause": "Участники из разных ROS_DOMAIN_ID не обнаруживают друг друга в этой конфигурации",
+    "proof_after": "Терминалы B и C были возвращены в домен 16. Тот же timeout 5s ros2 topic echo с тем же типом получил Pose и завершился с exit=0"
+  },
+  "claims": {
+    "public_tests_passed": true,
+    "defect_reproduced": true,
+    "defect_fixed": true
+  },
+  "time": {
+    "contact_academic_hours": 0,
+    "self_study_hours": 0.17
+  },
+  "time_note": "Демонстрационный прогон без контактной пары. Учтён интервал от запуска turtlesim до заполнения отчёта; это не замер нормативной трудоёмкости студенческой ПР.",
+  "ai_used": false,
+  "recorded_at_utc": "2026-09-10T04:46:44+00:00"
+}
